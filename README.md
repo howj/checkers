@@ -6,7 +6,7 @@ Front-End Interview Exercises
 
 1. Make sure you have [Git](https://www.git-scm.com/) `>= 2.13.2`, [Node.js](https://nodejs.org/en/) `>= 8.6.0` and [Yarn package manager](https://yarnpkg.com/lang/en/) installed on your computer.
 1. Fork and clone this repository locally.
-1. Run `yarn` to install all the dependencies.
+1. Run `yarn install` to install all the dependencies.
 1. Run `yarn start` to start the app in a new browser window (http://localhost:8080/). Each time you save changes to a file, the browser will reload with those changes.
 
 ### Checkers
