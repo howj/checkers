@@ -22,9 +22,7 @@ class CheckersBoard extends React.Component {
       },
     },
     possibleMoves: [],
-    mustJump: false,
     madeMove: false,
-    hasJumpsLeftInChain: false,
   };
 
   // Helper function to determine if the row and col examined is within
@@ -35,10 +33,10 @@ class CheckersBoard extends React.Component {
 
   // Kings can go backwards (to greater row values if RED, to lesser if WHITE)
   // A regular piece has 4 spots it could possibly go to while a king has 8
-  determineMoves(board, row, col, opponentColor, isKing) {
+  determineMoves(board, row, col, opponentColor, isKing, hasJump) {
     const movesObject = {
       moves: [],
-      hasJump: false,
+      hasJump: hasJump,
     };
     let jumpValue;
     let rowValue;
@@ -76,7 +74,7 @@ class CheckersBoard extends React.Component {
     } else {
       rowValue = row + 1;
     }
-    if (!movesObject.hasJump) {
+    if (!movesObject.hasJump && !hasJump) {
       if (this.isInbounds(board, rowValue, col - 1)) {
         if (board[rowValue][col - 1] === 0) {
           movesObject.moves.push({
@@ -111,6 +109,33 @@ class CheckersBoard extends React.Component {
 
     const whoseTurn = `Turn: ${this.state.turn === 2 ? 'Red' : 'White'}`;
 
+    let hasJump = false;
+    const map = new Map();
+
+    let gameOver = true;
+
+    // Calculate all possible moves for pieces color === turn
+    for (let i = 0; i < this.state.board.length; i++) {
+      for (let j = 0; j < this.state.board[0].length; j++) {
+        if (this.state.board[i][j] === this.state.turn) {
+          const opponentColor = this.state.turn === 1 ? 2 : 1;
+          const movesObject = this.determineMoves(this.state.board, i, j, opponentColor, false, hasJump);
+          // if (movesObject.moves > 0) {
+          //   gameOver = false;
+          // }
+          if (movesObject.hasJump) {
+            hasJump = true;
+          }
+          map.set(`(${i},${j})`, movesObject.moves);
+        }
+      }
+    }
+    if (map.keys().length > 0) {
+      gameOver = false;
+    }
+
+    // console.log(map);
+
     return (
       <div style={{ display: 'flex' }}>
         <svg
@@ -134,9 +159,14 @@ class CheckersBoard extends React.Component {
                     const oldRow = this.state.actions.piece.row;
                     const oldCol = this.state.actions.piece.col;
                     this.state.board[oldRow][oldCol] = 0;
+                    hasJump = true;
+                    const opponentColor = this.state.turn === 1 ? 2 : 1;
+                    const wasJump = map.get(`(${oldRow},${oldCol})`).find(move => move.isJump);
+                    const movesObject = this.determineMoves(this.state.board, y, x, opponentColor, false, hasJump);
 
                     this.setState((state) => {
                       return {
+                        possibleMoves: wasJump ? movesObject.moves : [],
                         madeMove: true,
                         actions: {
                           text: `Moved piece to (${y},${x}) from (${oldRow},${oldCol})`,
@@ -148,7 +178,7 @@ class CheckersBoard extends React.Component {
                       };
                     });
                   }}
-                  available={(!this.state.madeMove || this.state.hasJumpsLeftInChain) && this.state.possibleMoves.find(move => move.row === y && move.col === x)}
+                  available={this.state.possibleMoves.find(move => move.row === y && move.col === x)}
 
                   key={x}
                   shade={
@@ -174,18 +204,17 @@ class CheckersBoard extends React.Component {
 
               return (
                 <Piece
-                  hasJumpsLeftInChain={this.state.hasJumpsLeftInChain}
-                  madeMove={this.state.madeMove}
+                  isDisabled={this.state.madeMove && this.state.possibleMoves.length == 0}
+                  // hasJumpsLeftInChain={this.state.hasJumpsLeftInChain}
+                  // madeMove={this.state.madeMove}
                   selected={this.state.actions.text === `Selected piece at row ${y}, column ${x}`}
                   // When a player clicks their own Piece on their own turn
                   // show available spaces for the player to move their Piece
                   showAvailableMoves={() => {
-                    const opponentColor = this.state.turn === 1 ? 2 : 1;
-                    const movesObject = this.determineMoves(this.state.board, y, x, opponentColor, false); // TODO replace with real king
-                    const prunedMoves = [];
-                    // When a jump move can be made, only add jump moves
-                    movesObject.moves.forEach(move => {
-                      if (movesObject.hasJump || this.state.mustJump) {
+                    const moves = map.get(`(${y},${x})`);
+                    let prunedMoves = [];
+                    moves.forEach(move => {
+                      if (hasJump) {
                         if (move.isJump) {
                           prunedMoves.push({
                             row: move.row,
@@ -201,7 +230,6 @@ class CheckersBoard extends React.Component {
                     });
                     this.setState((state) => {
                       return {
-                        mustJump: movesObject.mustJump || this.state.mustJump,
                         actions: {
                           text: `Selected piece at row ${y}, column ${x}`,
                           piece: {
@@ -227,13 +255,12 @@ class CheckersBoard extends React.Component {
         <div style={{ marginLeft: '10px' }}>
           {whoseTurn}
           <button
-            disabled={!this.state.madeMove || this.state.hasJumpsLeftInChain}
+            disabled={!this.state.madeMove}
             style={{ marginLeft: '10px' }}
             onClick={() => {
               this.setState((state) => {
                 return {
                   madeMove: false,
-                  hasJumpsLeftInChain: false,
                   turn: state.turn === 2 ? 1 : 2,
                   actions: {
                     text: 'No piece selected',
@@ -243,7 +270,6 @@ class CheckersBoard extends React.Component {
                     },
                   },
                   possibleMoves: [],
-                  mustJump: false,
                 };
               });
             }}
@@ -295,7 +321,7 @@ class Space extends React.Component {
 
 class Piece extends React.Component {
   render() {
-    let isDisabled = this.props.madeMove && !this.props.hasJumpsLeftInChain;
+    let isDisabled = this.props.isDisabled;
     if ((this.props.turn === 2 && this.props.player === 1) || (this.props.turn === 1 && this.props.player === 2)) {
       isDisabled = true;
     }
