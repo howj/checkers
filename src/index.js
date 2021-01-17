@@ -16,34 +16,77 @@ class CheckersBoard extends React.Component {
     turn: 2,
     actions: 'No piece selected',
     possibleMoves: [],
+    jumpAvailable: false,
   };
 
   isInbounds(board, row, col) {
-    return (0 <= row <= 8) && (0 <= col <= 8);
+    return ((0 <= row && row < 8) && (0 <= col && col < 8));
   }
 
-  // Kings can go backwards (to greater row values)
+  // Kings can go backwards (to greater row values if RED, to lesser if WHITE)
   // A regular piece has 4 spots it could possibly go to while a king has 8
   determineMoves(board, row, col, opponentColor, isKing) {
     const moves = [];
-    if (this.isInbounds(board, row-1, col-1)) {
-      if (board[row-1][col-1] === 0) {
-        moves.push(`(${row-1},${col-1})`);
+    let jumpValue;
+    let rowValue;
+    if (opponentColor === 1) {
+      rowValue = row - 2;
+      jumpValue = row - 1;
+    } else {
+      rowValue = row + 2;
+      jumpValue = row + 1;
+    }
+    if (this.isInbounds(board, rowValue, col - 2)) {
+      if (board[rowValue][col - 2] === 0 && board[jumpValue][col - 1] === opponentColor) {
+        moves.push({
+          row: rowValue,
+          col: col - 2,
+          key: `(${rowValue},${col-2})`,
+        });
+        this.setState((state) => {
+          return {
+            jumpAvailable: true,
+          };
+        });
       }
     }
-    if (this.isInbounds(board, row-1, col+1)) {
-      if (board[row-1][col+1] === 0) {
-        moves.push(`(${row-1},${col+1})`);
+    if (this.isInbounds(board, rowValue, col + 2)) {
+      if (board[rowValue][col + 2] === 0 && board[jumpValue][col + 1] === opponentColor) {
+        moves.push({
+          row: rowValue,
+          col: col + 2,
+          key: `(${rowValue},${col+2})`,
+        });
+        this.setState((state) => {
+          return {
+            jumpAvailable: true,
+          };
+        });
       }
     }
-    if (this.isInbounds(board, row-2, col-2)) {
-      if (board[row-2][col-2] === 0 && board[row-1][col-1] === opponentColor) {
-        moves.push(`(${row-2},${col-2})`);
-      }
+    if (opponentColor === 1) {
+      rowValue = row - 1;
+    } else {
+      rowValue = row + 1;
     }
-    if (this.isInbounds(board, row-2, col+2)) {
-      if (board[row-2][col+2] === 0 && board[row-1][col+1] === opponentColor) {
-        moves.push(`(${row-2},${col+2})`);
+    if (!this.state.jumpAvailable) {
+      if (this.isInbounds(board, rowValue, col - 1)) {
+        if (board[rowValue][col - 1] === 0) {
+          moves.push({
+            row: rowValue,
+            col: col - 1,
+            key: `(${rowValue},${col-1})`,
+          });
+        }
+      }
+      if (this.isInbounds(board, rowValue, col + 1)) {
+        if (board[rowValue][col + 1] === 0) {
+          moves.push({
+            row: rowValue,
+            col: col + 1,
+            key: `(${rowValue},${col+1})`,
+          });
+        }
       }
     }
     // TODO add more cases if piece is a king
@@ -76,7 +119,7 @@ class CheckersBoard extends React.Component {
 
               return (
                 <Space
-                  available={this.state.possibleMoves.includes(`(${y},${x})`)}
+                  available={this.state.possibleMoves.find(move => move.row === y && move.col === x)}
                   key={x}
                   shade={
                     (isEvenSpace && !isEvenRow) || (!isEvenSpace && isEvenRow)
@@ -107,10 +150,27 @@ class CheckersBoard extends React.Component {
                   showAvailableMoves={() => {
                     const opponentColor = this.state.turn === 1 ? 2 : 1;
                     const moves = this.determineMoves(this.state.board, y, x, opponentColor, false); // TODO replace with real king
+                    const prunedMoves = [];
+                    // Only add jump moves if a jump is available
+                    moves.forEach(move => {
+                      if (this.state.jumpAvailable) {
+                        if (move.row === y - 2 || move.row === y + 2 || move.col === x - 2 || move.col === x + 2) {
+                          prunedMoves.push({
+                            row: move.row,
+                            col: move.col,
+                          });
+                        }
+                      } else {
+                        prunedMoves.push({
+                          row: move.row,
+                          col: move.col,
+                        });
+                      }
+                    });
                     this.setState((state) => {
                       return {
                         actions: `Selected piece at row ${y}, column ${x}`,
-                        possibleMoves: moves,
+                        possibleMoves: prunedMoves,
                       };
                     });
                   }}
@@ -127,7 +187,19 @@ class CheckersBoard extends React.Component {
         </svg>
         <div style={{ marginLeft: '10px' }}>
           {whoseTurn}
-          <button style={{ marginLeft: '10px' }}>
+          <button
+            style={{ marginLeft: '10px' }}
+            onClick={() => {
+              this.setState((state) => {
+                return {
+                  turn: state.turn === 2 ? 1 : 2,
+                  actions: 'No piece selected',
+                  possibleMoves: [],
+                  jumpAvailable: false,
+                };
+              });
+            }}
+          >
             End Turn
           </button>
           <div>
@@ -137,7 +209,7 @@ class CheckersBoard extends React.Component {
             <div>
               Possible moves:
               {' '}
-              {this.state.possibleMoves.length > 0 ? this.state.possibleMoves : 'None'}
+              {this.state.possibleMoves.length > 0 ? this.state.possibleMoves.map(move => { return (<div>{`(${move.row},${move.col})`}</div>) }) : 'None'}
             </div>
           )}
         </div>
@@ -150,7 +222,7 @@ class Space extends React.Component {
   render() {
     let fill;
     if (this.props.available) {
-      fill = 'yellow'; 
+      fill = 'yellow';
     } else if (this.props.shade) {
       fill = 'green';
     } else {
