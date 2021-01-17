@@ -112,7 +112,7 @@ class CheckersBoard extends React.Component {
     let hasJump = false;
     const map = new Map();
 
-    let gameOver = true;
+    let gameOver = false;
 
     // Calculate all possible moves for pieces color === turn
     for (let i = 0; i < this.state.board.length; i++) {
@@ -120,9 +120,6 @@ class CheckersBoard extends React.Component {
         if (this.state.board[i][j] === this.state.turn) {
           const opponentColor = this.state.turn === 1 ? 2 : 1;
           const movesObject = this.determineMoves(this.state.board, i, j, opponentColor, false, hasJump);
-          // if (movesObject.moves > 0) {
-          //   gameOver = false;
-          // }
           if (movesObject.hasJump) {
             hasJump = true;
           }
@@ -130,11 +127,9 @@ class CheckersBoard extends React.Component {
         }
       }
     }
-    if (map.keys().length > 0) {
-      gameOver = false;
+    if (map.keys().length === 0) {
+      gameOver = true;
     }
-
-    // console.log(map);
 
     return (
       <div style={{ display: 'flex' }}>
@@ -162,11 +157,14 @@ class CheckersBoard extends React.Component {
                     hasJump = true;
                     const opponentColor = this.state.turn === 1 ? 2 : 1;
                     const wasJump = map.get(`(${oldRow},${oldCol})`).find(move => move.isJump);
+                    if (wasJump) {
+                      this.state.board[(oldRow+y)/2][(oldCol+x)/2] = 0;
+                    }
                     const movesObject = this.determineMoves(this.state.board, y, x, opponentColor, false, hasJump);
 
                     this.setState((state) => {
                       return {
-                        possibleMoves: wasJump ? movesObject.moves : [],
+                        possibleMoves: wasJump ? movesObject.moves : [], // if just jumped, and jumps available, then we can move again
                         madeMove: true,
                         actions: {
                           text: `Moved piece to (${y},${x}) from (${oldRow},${oldCol})`,
@@ -204,7 +202,7 @@ class CheckersBoard extends React.Component {
 
               return (
                 <Piece
-                  isDisabled={this.state.madeMove && this.state.possibleMoves.length == 0}
+                  isDisabled={(y === this.state.actions.piece.row && x === this.state.actions.piece.col) ? this.state.possibleMoves.length === 0 : this.state.madeMove}
                   // hasJumpsLeftInChain={this.state.hasJumpsLeftInChain}
                   // madeMove={this.state.madeMove}
                   selected={this.state.actions.text === `Selected piece at row ${y}, column ${x}`}
@@ -253,38 +251,47 @@ class CheckersBoard extends React.Component {
           })}
         </svg>
         <div style={{ marginLeft: '10px' }}>
-          {whoseTurn}
-          <button
-            disabled={!this.state.madeMove}
-            style={{ marginLeft: '10px' }}
-            onClick={() => {
-              this.setState((state) => {
-                return {
-                  madeMove: false,
-                  turn: state.turn === 2 ? 1 : 2,
-                  actions: {
-                    text: 'No piece selected',
-                    piece: {
-                      row: -1,
-                      col: -1,
-                    },
-                  },
-                  possibleMoves: [],
-                };
-              });
-            }}
-          >
-            End Turn
-          </button>
-          <div>
-            {this.state.actions.text}
-          </div>
-          {this.state.actions.text !== 'No piece selected' && (
+          {gameOver && (
             <div>
-              Possible moves:
-              {' '}
-              {this.state.possibleMoves.length > 0 ? this.state.possibleMoves.map(move => { return (<div>{`(${move.row},${move.col})`}</div>) }) : 'None'}
+              {`Game over. ${this.state.turn === 2 ? 'White' : 'Red'} is the victor`}
             </div>
+          )}
+          {!gameOver && (
+            <>
+              {whoseTurn}
+              <button
+                disabled={!this.state.madeMove || this.state.possibleMoves.length > 0}
+                style={{ marginLeft: '10px' }}
+                onClick={() => {
+                  this.setState((state) => {
+                    return {
+                      madeMove: false,
+                      turn: state.turn === 2 ? 1 : 2,
+                      actions: {
+                        text: 'No piece selected',
+                        piece: {
+                          row: -1,
+                          col: -1,
+                        },
+                      },
+                      possibleMoves: [],
+                    };
+                  });
+                }}
+              >
+                End Turn
+              </button>
+              <div>
+                {this.state.actions.text}
+              </div>
+              {this.state.actions.text !== 'No piece selected' && (
+                <div>
+                  Possible moves:
+                  {' '}
+                  {this.state.possibleMoves.length > 0 ? this.state.possibleMoves.map(move => { return (<div>{`(${move.row},${move.col})`}</div>) }) : 'None'}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
