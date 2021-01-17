@@ -22,16 +22,16 @@ class CheckersBoard extends React.Component {
       // [0, 0, 0, 0, 0, 0, 0, 0],
       // [0, 0, 0, 0, 0, 0, 0, 0]
 
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 2],
+      [0, 20, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 1, 0, 2],
       [0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 1, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0]
+      [0, 10, 0, 0, 0, 0, 0, 0]
     ],
-    turn: 1,
+    turn: 2,
     actions: {
       text: 'No piece selected',
       piece: {
@@ -66,7 +66,7 @@ class CheckersBoard extends React.Component {
       jumpValue = row + 1;
     }
     if (this.isInbounds(board, rowValue, col - 2)) {
-      if (board[rowValue][col - 2] === 0 && board[jumpValue][col - 1] === opponentColor) {
+      if (board[rowValue][col - 2] === 0 && (board[jumpValue][col - 1] === opponentColor || board[jumpValue][col - 1] === opponentColor * 10)) {
         movesObject.moves.push({
           row: rowValue,
           col: col - 2,
@@ -77,7 +77,7 @@ class CheckersBoard extends React.Component {
       }
     }
     if (this.isInbounds(board, rowValue, col + 2)) {
-      if (board[rowValue][col + 2] === 0 && board[jumpValue][col + 1] === opponentColor) {
+      if (board[rowValue][col + 2] === 0 && (board[jumpValue][col + 1] === opponentColor || board[jumpValue][col + 1] === opponentColor * 10)) {
         movesObject.moves.push({
           row: rowValue,
           col: col + 2,
@@ -135,9 +135,9 @@ class CheckersBoard extends React.Component {
     // Calculate all possible moves for pieces color === turn
     for (let i = 0; i < this.state.board.length; i++) {
       for (let j = 0; j < this.state.board[0].length; j++) {
-        if (this.state.board[i][j] === this.state.turn) {
+        if (this.state.board[i][j] === this.state.turn || this.state.board[i][j] === this.state.turn * 10 ) {
           const opponentColor = this.state.turn === 1 ? 2 : 1;
-          const movesObject = this.determineMoves(this.state.board, i, j, opponentColor, false, hasJump);
+          const movesObject = this.determineMoves(this.state.board, i, j, opponentColor, this.state.board[i][j] > 2, hasJump);
           if (movesObject.hasJump) {
             hasJump = true;
           }
@@ -168,11 +168,19 @@ class CheckersBoard extends React.Component {
 
               return (
                 <Space
-                  // TODO: handle promotion
                   selectMove={() => {
-                    this.state.board[y][x] = this.state.turn;
+                    // If the piece we just moved was a king, or the piece
+                    // entered the final row, promote it
                     const oldRow = this.state.actions.piece.row;
                     const oldCol = this.state.actions.piece.col;
+                    if (this.state.board[oldRow][oldCol] > 2
+                      || (this.state.turn === 1 && y === 7)
+                      || (this.state.turn === 2 && y === 0)
+                    ) {
+                      this.state.board[y][x] = this.state.turn * 10;
+                    } else {
+                      this.state.board[y][x] = this.state.turn;
+                    }
                     this.state.board[oldRow][oldCol] = 0;
                     hasJump = true;
                     const opponentColor = this.state.turn === 1 ? 2 : 1;
@@ -180,7 +188,7 @@ class CheckersBoard extends React.Component {
                     if (wasJump) {
                       this.state.board[(oldRow+y)/2][(oldCol+x)/2] = 0;
                     }
-                    const movesObject = this.determineMoves(this.state.board, y, x, opponentColor, false, hasJump);
+                    const movesObject = this.determineMoves(this.state.board, y, x, opponentColor, this.state.board[y][x] > 2, hasJump);
 
                     this.setState((state) => {
                       return {
@@ -222,6 +230,7 @@ class CheckersBoard extends React.Component {
 
               return (
                 <Piece
+                  isKing={this.state.board[y][x] > 2}
                   isDisabled={(y === this.state.actions.piece.row && x === this.state.actions.piece.col) ? this.state.possibleMoves.length === 0 : this.state.madeMove}
                   // hasJumpsLeftInChain={this.state.hasJumpsLeftInChain}
                   // madeMove={this.state.madeMove}
@@ -353,24 +362,43 @@ class Piece extends React.Component {
       isDisabled = true;
     }
     let fill;
-    if (this.props.player === 1) {
+    if (this.props.player === 1 || this.props.player == 10) {
       fill = this.props.selected ? 'gray' : 'white';
     } else {
       fill = this.props.selected ? 'orange' : 'red';
     }
-    return (
-      <circle
-        cx={this.props.centerX}
-        cy={this.props.centerY}
-        fill={fill}
-        r={this.props.radius}
-        onClick={() => {
-          if (!isDisabled) {
-            this.props.showAvailableMoves();
-          }
-        }}
-      />
-    );
+    if (this.props.isKing) {
+      return (
+        <circle
+          cx={this.props.centerX}
+          cy={this.props.centerY}
+          fill={fill}
+          r={this.props.radius}
+          stroke="black"
+          strokeWidth="3"
+          onClick={() => {
+            if (!isDisabled) {
+              this.props.showAvailableMoves();
+            }
+          }}
+        />
+      );
+    }
+    if (!this.props.isKing) {
+      return (
+        <circle
+          cx={this.props.centerX}
+          cy={this.props.centerY}
+          fill={fill}
+          r={this.props.radius}
+          onClick={() => {
+            if (!isDisabled) {
+              this.props.showAvailableMoves();
+            }
+          }}
+        />
+      );
+    }
   }
 }
 
