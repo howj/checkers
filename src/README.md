@@ -5,7 +5,7 @@
 - ~~Remove piece when captured~~
 - ~~If after jumping, the piece that just jumped can make another jump, user must continue making jumps until no moves are left before ending turn~~
 - ~~Promotion upon reaching other side (use 1 * 10 and 2 * 10)~~
-- Implement additional movement of king pieces
+- ~~Implement additional movement of king pieces~~
 - ~~End game conditions~~
 
 # Testing boards
@@ -13,15 +13,15 @@
       [0, 0, 0, 0, 0, 0, 0, 1],
       [0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 1, 0, 0, 0, 0],
+      [0, 0, 1, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 1, 0, 0],
-      [0, 0, 0, 0, 0, 0, 2, 0],
+      [0, 0, 0, 0, 1, 0, 0, 0],
+      [0, 0, 0, 0, 0, 2, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0],
 
       [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 1, 0, 0],
-      [0, 0, 0, 0, 0, 0, 2, 0],
+      [0, 0, 0, 0, 0, 0, 1, 0],
+      [0, 0, 0, 0, 0, 2, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0],
@@ -29,10 +29,10 @@
       [0, 0, 0, 0, 0, 0, 0, 0]
 
       [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 2],
+      [0, 0, 0, 0, 1, 0, 2, 0],
       [0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 1, 0],
+      [0, 0, 0, 0, 0, 0, 0, 1],
       [0, 0, 0, 0, 0, 0, 0, 0]

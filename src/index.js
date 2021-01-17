@@ -4,32 +4,32 @@ import { render } from "react-dom";
 class CheckersBoard extends React.Component {
   state = {
     board: [
-      // [0, 1, 0, 1, 0, 1, 0, 1],
-      // [1, 0, 1, 0, 1, 0, 1, 0],
-      // [0, 1, 0, 1, 0, 1, 0, 1],
-      // [0, 0, 0, 0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 0, 0, 0, 0],
-      // [2, 0, 2, 0, 2, 0, 2, 0],
-      // [0, 2, 0, 2, 0, 2, 0, 2],
-      // [2, 0, 2, 0, 2, 0, 2, 0]
+      [0, 1, 0, 1, 0, 1, 0, 1],
+      [1, 0, 1, 0, 1, 0, 1, 0],
+      [0, 1, 0, 1, 0, 1, 0, 1],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [2, 0, 2, 0, 2, 0, 2, 0],
+      [0, 2, 0, 2, 0, 2, 0, 2],
+      [2, 0, 2, 0, 2, 0, 2, 0]
       // below tests win conditions
-      // [0, 0, 0, 0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 0, 1, 0, 0],
-      // [0, 0, 0, 0, 0, 0, 2, 0],
+      // [0, 0, 0, 0, 0, 0, 0, 1],
       // [0, 0, 0, 0, 0, 0, 0, 0],
       // [0, 0, 0, 0, 0, 0, 0, 0],
+      // [0, 0, 1, 0, 0, 0, 0, 0],
       // [0, 0, 0, 0, 0, 0, 0, 0],
+      // [0, 0, 0, 0, 1, 0, 0, 0],
+      // [0, 0, 0, 0, 0, 2, 0, 0],
       // [0, 0, 0, 0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 0, 0, 0, 0]
 
-      [0, 20, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 1, 0, 2],
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 1, 0],
-      [0, 10, 0, 0, 0, 0, 0, 0]
+      // [0, 0, 0, 0, 0, 0, 0, 0],
+      // [0, 0, 0, 0, 1, 0, 2, 0],
+      // [0, 0, 0, 0, 0, 0, 0, 0],
+      // [0, 0, 0, 0, 0, 0, 0, 0],
+      // [0, 0, 0, 0, 0, 0, 0, 0],
+      // [0, 0, 0, 0, 0, 0, 0, 0],
+      // [0, 0, 0, 0, 0, 0, 0, 1],
+      // [0, 0, 0, 0, 0, 0, 0, 0]
     ],
     turn: 2,
     actions: {
@@ -87,6 +87,37 @@ class CheckersBoard extends React.Component {
         movesObject.hasJump = true;
       }
     }
+    if (isKing) {
+      if (opponentColor === 1) {
+        rowValue = row + 2;
+        jumpValue = row + 1;
+      } else {
+        rowValue = row - 2;
+        jumpValue = row - 1;
+      }
+      if (this.isInbounds(board, rowValue, col - 2)) {
+        if (board[rowValue][col - 2] === 0 && (board[jumpValue][col - 1] === opponentColor || board[jumpValue][col - 1] === opponentColor * 10)) {
+          movesObject.moves.push({
+            row: rowValue,
+            col: col - 2,
+            key: `(${rowValue},${col - 2})`,
+            isJump: true,
+          });
+          movesObject.hasJump = true;
+        }
+      }
+      if (this.isInbounds(board, rowValue, col + 2)) {
+        if (board[rowValue][col + 2] === 0 && (board[jumpValue][col + 1] === opponentColor || board[jumpValue][col + 1] === opponentColor * 10)) {
+          movesObject.moves.push({
+            row: rowValue,
+            col: col + 2,
+            key: `(${rowValue},${col + 2})`,
+            isJump: true,
+          });
+          movesObject.hasJump = true;
+        }
+      }
+    }
     if (opponentColor === 1) {
       rowValue = row - 1;
     } else {
@@ -114,10 +145,36 @@ class CheckersBoard extends React.Component {
         }
       }
     }
-    // TODO add more cases if piece is a king
-    // if (isKing) {
-
-    // }
+    // add more cases if piece is a king
+    if (isKing) {
+      if (opponentColor === 1) {
+        rowValue = row + 1;
+      } else {
+        rowValue = row - 1;
+      }
+      if (!movesObject.hasJump && !hasJump) {
+        if (this.isInbounds(board, rowValue, col - 1)) {
+          if (board[rowValue][col - 1] === 0) {
+            movesObject.moves.push({
+              row: rowValue,
+              col: col - 1,
+              key: `(${rowValue},${col - 1})`,
+              isJump: false,
+            });
+          }
+        }
+        if (this.isInbounds(board, rowValue, col + 1)) {
+          if (board[rowValue][col + 1] === 0) {
+            movesObject.moves.push({
+              row: rowValue,
+              col: col + 1,
+              key: `(${rowValue},${col + 1})`,
+              isJump: false,
+            });
+          }
+        }
+      }
+    }
     return movesObject;
   }
 
