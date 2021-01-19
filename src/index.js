@@ -12,24 +12,6 @@ class CheckersBoard extends React.Component {
       [2, 0, 2, 0, 2, 0, 2, 0],
       [0, 2, 0, 2, 0, 2, 0, 2],
       [2, 0, 2, 0, 2, 0, 2, 0]
-      // below tests win conditions
-      // [0, 0, 0, 0, 0, 0, 0, 1],
-      // [0, 0, 0, 0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 0, 0, 0, 0],
-      // [0, 0, 1, 0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 1, 0, 0, 0],
-      // [0, 0, 0, 0, 0, 2, 0, 0],
-      // [0, 0, 0, 0, 0, 0, 0, 0],
-
-      // [0, 0, 0, 0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 1, 0, 2, 0],
-      // [0, 0, 0, 0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 0, 0, 0, 0],
-      // [0, 0, 0, 0, 0, 0, 0, 1],
-      // [0, 0, 0, 0, 0, 0, 0, 0]
     ],
     turn: 2,
     actions: {
@@ -239,8 +221,9 @@ class CheckersBoard extends React.Component {
                       this.state.board[y][x] = this.state.turn;
                     }
                     this.state.board[oldRow][oldCol] = 0;
-                    hasJump = true;
+                    hasJump = true; // set this value, so possibleMoves only contains jumps from this piece
                     const opponentColor = this.state.turn === 1 ? 2 : 1;
+                    // if move was just jump, remove the opponent's piece from the board by setting to 0
                     const wasJump = map.get(`(${oldRow},${oldCol})`).find(move => move.isJump);
                     if (wasJump) {
                       this.state.board[(oldRow+y)/2][(oldCol+x)/2] = 0;
@@ -262,7 +245,6 @@ class CheckersBoard extends React.Component {
                     });
                   }}
                   available={this.state.possibleMoves.find(move => move.row === y && move.col === x)}
-
                   key={x}
                   shade={
                     (isEvenSpace && !isEvenRow) || (!isEvenSpace && isEvenRow)
@@ -289,14 +271,13 @@ class CheckersBoard extends React.Component {
                 <Piece
                   isKing={this.state.board[y][x] > 2}
                   isDisabled={(y === this.state.actions.piece.row && x === this.state.actions.piece.col) ? this.state.possibleMoves.length === 0 : this.state.madeMove}
-                  // hasJumpsLeftInChain={this.state.hasJumpsLeftInChain}
-                  // madeMove={this.state.madeMove}
-                  selected={this.state.actions.text === `Selected piece at row ${y}, column ${x}`}
+                  selected={this.state.actions.text === `Selected piece at (${y},${x})`}
                   // When a player clicks their own Piece on their own turn
                   // show available spaces for the player to move their Piece
                   showAvailableMoves={() => {
                     const moves = map.get(`(${y},${x})`);
                     let prunedMoves = [];
+                    // If there is a jump available, we prune the possible moves by only adding jump moves
                     moves.forEach(move => {
                       if (hasJump) {
                         if (move.isJump) {
@@ -315,7 +296,7 @@ class CheckersBoard extends React.Component {
                     this.setState((state) => {
                       return {
                         actions: {
-                          text: `Selected piece at row ${y}, column ${x}`,
+                          text: `Selected piece at (${y},${x})`,
                           piece: {
                             row: y,
                             col: x,

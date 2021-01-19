@@ -1,12 +1,6 @@
+# Information
 
-# Still left todo
-
-- ~~Disallow non jump moves if there is a jump move that can be made~~
-- ~~Remove piece when captured~~
-- ~~If after jumping, the piece that just jumped can make another jump, user must continue making jumps until no moves are left before ending turn~~
-- ~~Promotion upon reaching other side (use 1 * 10 and 2 * 10)~~
-- ~~Implement additional movement of king pieces~~
-- ~~End game conditions~~
+Players interact with the board by clicking pieces, then spaces to move to, on their turn. Upon clicking a piece, the clicked piece is highlighted, and available spots they can move the piece to are also highlighted. A player ends their turn after making their move/when they have no more jumps possible. King pieces have a black outline around them. The game ends when the current player has no more moves they can make, or after making a move, they are left with no more moves.
 
 # Testing boards
 
