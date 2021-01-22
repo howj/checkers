@@ -400,7 +400,7 @@ class Piece extends React.Component {
       isDisabled = true;
     }
     let fill;
-    if (this.props.player === 1 || this.props.player == 10) {
+    if (this.props.player === 1 || this.props.player === 10) {
       fill = this.props.selected ? 'gray' : 'white';
     } else {
       fill = this.props.selected ? 'orange' : 'red';
