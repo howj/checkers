@@ -1,7 +1,3 @@
-# front-end-interview
-
-Front-End Interview Exercises
-
 ## First, Do This
 
 1. Make sure you have [Git](https://www.git-scm.com/) `>= 2.13.2`, [Node.js](https://nodejs.org/en/) `>= 8.6.0` and [Yarn package manager](https://yarnpkg.com/lang/en/) installed on your computer.
